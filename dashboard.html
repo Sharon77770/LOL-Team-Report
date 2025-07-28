@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LoL 승률 분석 - 탭 UI 적용</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  /* 탭 선택 시 하단 밑줄 스타일 */
+  .tab-button.active {
+    border-bottom-width: 3px;
+    border-bottom-color: #2563eb; /* Tailwind blue-600 */
+    font-weight: 600;
+  }
+</style>
+</head>
+<body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white min-h-screen p-6 flex flex-col items-center">
+
+<header class="mb-8 max-w-5xl w-full text-center">
+  <h1 class="text-4xl font-bold mb-1">LoL 개인 및 팀 승률 분석</h1>
+  <p class="text-gray-600 dark:text-gray-400 mb-6">.ltrs 파일 업로드 후 다양한 승률 분석을 탭별로 확인하세요.</p>
+</header>
+
+<div class="max-w-5xl w-full flex flex-col space-y-4">
+
+  <!-- 파일 업로드 및 분석 버튼 -->
+  <div class="flex flex-col sm:flex-row gap-4 mb-6">
+    <input id="upload" type="file" accept=".ltrs" multiple
+      class="block w-full sm:w-auto px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
+    <button id="analyzeBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded disabled:opacity-50" disabled>
+      분석 시작
+    </button>
+  </div>
+
+  <!-- 탭 버튼들 -->
+  <nav class="flex border-b border-gray-300 dark:border-gray-700 mb-4 space-x-4 text-gray-700 dark:text-gray-300">
+    <button class="tab-button active px-3 py-2 focus:outline-none" data-tab="overall">전체 전적</button>
+    <button class="tab-button px-3 py-2 focus:outline-none" data-tab="individual">개인 승률</button>
+    <button class="tab-button px-3 py-2 focus:outline-none" data-tab="compare">두 명 승률 비교</button>
+    <button class="tab-button px-3 py-2 focus:outline-none" data-tab="teamFilter">특정 유저 포함 팀 승률</button>
+    <button class="tab-button px-3 py-2 focus:outline-none" data-tab="exactTeam">특정 팀 승률</button>
+    <button class="tab-button px-3 py-2 focus:outline-none" data-tab="matchDetails">경기 상세 기록</button>
+  </nav>
+
+  <!-- 탭 컨텐츠 -->
+  <section id="overall" class="tab-content block">
+    <h2 class="text-2xl font-semibold mb-2">전체 전적</h2>
+    <div id="overallResult" class="border border-gray-300 dark:border-gray-700 rounded p-4 bg-gray-50 dark:bg-gray-800 min-h-[4rem] text-center text-lg font-medium">
+      데이터를 업로드하고 분석을 시작하세요.
+    </div>
+  </section>
+
+  <section id="individual" class="tab-content hidden">
+    <h2 class="text-2xl font-semibold mb-2">개인 승률</h2>
+    <div id="individualResult" class="overflow-auto max-h-96 border border-gray-300 dark:border-gray-700 rounded p-2 bg-gray-50 dark:bg-gray-800"></div>
+  </section>
+
+  <section id="compare" class="tab-content hidden">
+    <h2 class="text-2xl font-semibold mb-2">두 명 승률 비교</h2>
+    <div class="flex flex-col sm:flex-row gap-4 mb-2">
+      <input type="text" id="playerA" placeholder="유저 A 이름" class="flex-1 px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
+      <input type="text" id="playerB" placeholder="유저 B 이름" class="flex-1 px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
+      <button id="compareBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">비교하기</button>
+    </div>
+    <div id="compareResult" class="border border-gray-300 dark:border-gray-700 rounded p-4 bg-gray-50 dark:bg-gray-800 min-h-[4rem]"></div>
+  </section>
+
+  <section id="teamFilter" class="tab-content hidden">
+    <h2 class="text-2xl font-semibold mb-2">특정 유저 포함 팀 승률</h2>
+    <div class="flex gap-4 mb-2">
+      <input type="text" id="teamUsers" placeholder="콤마(,)로 구분된 유저 이름들" class="flex-grow px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
+      <button id="filterBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">분석하기</button>
+    </div>
+    <div id="teamFilterResult" class="overflow-auto max-h-96 border border-gray-300 dark:border-gray-700 rounded p-2 bg-gray-50 dark:bg-gray-800"></div>
+  </section>
+
+  <section id="exactTeam" class="tab-content hidden">
+    <h2 class="text-2xl font-semibold mb-2">특정 팀 승률 검색</h2>
+    <p class="mb-2 text-gray-600 dark:text-gray-400">플레이어 이름 5명을 콤마(,)로 구분하여 입력하세요.</p>
+    <div class="flex gap-4 mb-2">
+      <input type="text" id="exactTeamInput" placeholder="예: Alice,Bob,Carol,Dave,Eve" class="flex-grow px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
+      <button id="exactTeamBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">검색</button>
+    </div>
+    <div id="exactTeamResult" class="border border-gray-300 dark:border-gray-700 rounded p-4 bg-gray-50 dark:bg-gray-800 min-h-[4rem]"></div>
+  </section>
+
+  <section id="matchDetails" class="tab-content hidden">
+    <h2 class="text-2xl font-semibold mb-2">경기 상세 기록</h2>
+    <div id="matchDetailsContainer" class="overflow-auto max-h-96 border border-gray-300 dark:border-gray-700 rounded p-4 bg-gray-50 dark:bg-gray-800 text-sm font-mono"></div>
+  </section>
+
+</div>
+
+<script>
+  // 탭 기능
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      tabButtons.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      tabContents.forEach(tc => {
+        tc.classList.add('hidden');
+        tc.classList.remove('block');
+      });
+
+      const tab = btn.getAttribute('data-tab');
+      const activeTab = document.getElementById(tab);
+      activeTab.classList.remove('hidden');
+      activeTab.classList.add('block');
+    });
+  });
+
+  let allMatches = [];
+
+  // UI 엘리먼트
+  const uploadInput = document.getElementById('upload');
+  const analyzeBtn = document.getElementById('analyzeBtn');
+  const individualResult = document.getElementById('individualResult');
+  const compareBtn = document.getElementById('compareBtn');
+  const compareResult = document.getElementById('compareResult');
+  const filterBtn = document.getElementById('filterBtn');
+  const teamFilterResult = document.getElementById('teamFilterResult');
+  const overallResult = document.getElementById('overallResult');
+  const exactTeamBtn = document.getElementById('exactTeamBtn');
+  const exactTeamInput = document.getElementById('exactTeamInput');
+  const exactTeamResult = document.getElementById('exactTeamResult');
+  const matchDetailsContainer = document.getElementById('matchDetailsContainer');
+
+  // .ltrs 파일 로드 및 파싱 (JSON 배열 가정)
+  uploadInput.addEventListener('change', () => {
+    allMatches = [];
+    analyzeBtn.disabled = true;
+    individualResult.innerHTML = '';
+    compareResult.innerHTML = '';
+    teamFilterResult.innerHTML = '';
+    overallResult.textContent = '데이터를 업로드하고 분석을 시작하세요.';
+    exactTeamResult.textContent = '';
+    matchDetailsContainer.textContent = '';
+
+    if (uploadInput.files.length === 0) {
+      analyzeBtn.disabled = true;
+      return;
+    }
+
+    const files = Array.from(uploadInput.files);
+    let readCount = 0;
+    let aggregatedMatches = [];
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+
+          // data는 배열 형태, 각 요소가 경기 기록 객체라고 가정
+          // 각 경기: {red: [{name,line}], blue: [{name,line}], result: {winner:'red'|'blue', kills:'5-3'} }
+          if (Array.isArray(data)) {
+            aggregatedMatches.push(...data);
+          } else {
+            alert(`잘못된 파일 형식: ${file.name} (배열이 아님)`);
+          }
+        } catch (err) {
+          alert(`파싱 에러: ${file.name}\n${err}`);
+        }
+        readCount++;
+        if (readCount === files.length) {
+          allMatches = aggregatedMatches;
+          analyzeBtn.disabled = false;
+          overallResult.textContent = `총 ${allMatches.length}경기 데이터 로드 완료. 분석 버튼을 누르세요.`;
+          individualResult.innerHTML = '';
+          compareResult.innerHTML = '';
+          teamFilterResult.innerHTML = '';
+          exactTeamResult.textContent = '';
+          matchDetailsContainer.textContent = '';
+        }
+      };
+      reader.readAsText(file);
+    });
+  });
+
+  // 분석 버튼 클릭
+  analyzeBtn.addEventListener('click', () => {
+    if (allMatches.length === 0) return;
+
+    // 전체 전적 계산
+    const totalGames = allMatches.length;
+    const redWins = allMatches.filter(m => m.result.winner === 'red').length;
+    const blueWins = totalGames - redWins;
+    const overallWinRate = ((redWins / totalGames) * 100).toFixed(1);
+
+    overallResult.innerHTML = `
+      <p>총 경기 수: <strong>${totalGames}</strong></p>
+      <p>레드팀 승리: <strong>${redWins}</strong> (승률 ${overallWinRate}%)</p>
+      <p>블루팀 승리: <strong>${blueWins}</strong> (승률 ${(100 - overallWinRate).toFixed(1)}%)</p>
+    `;
+
+    // 개인 승률 계산
+    const playerStats = new Map();
+
+    allMatches.forEach(({red, blue, result}) => {
+      const redWon = result.winner === 'red';
+
+      red.forEach(({name}) => {
+        if (!name) return;
+        if (!playerStats.has(name)) playerStats.set(name, {wins:0, losses:0, total:0});
+        const stats = playerStats.get(name);
+        stats.total++;
+        if (redWon) stats.wins++; else stats.losses++;
+      });
+
+      blue.forEach(({name}) => {
+        if (!name) return;
+        if (!playerStats.has(name)) playerStats.set(name, {wins:0, losses:0, total:0});
+        const stats = playerStats.get(name);
+        stats.total++;
+        if (!redWon) stats.wins++; else stats.losses++;
+      });
+    });
+
+    // 개인 승률 테이블 렌더링
+    const sortedPlayers = Array.from(playerStats.entries()).sort((a,b) => b[1].total - a[1].total);
+    let html = `<table class="w-full border-collapse border border-gray-300 dark:border-gray-700 text-sm">
+      <thead class="bg-gray-100 dark:bg-gray-800">
+        <tr>
+          <th class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-left">플레이어</th>
+          <th class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">경기 수</th>
+          <th class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">승리</th>
+          <th class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">패배</th>
+          <th class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">승률 (%)</th>
+        </tr>
+      </thead><tbody>`;
+
+    sortedPlayers.forEach(([name, s]) => {
+      const rate = s.total ? ((s.wins/s.total)*100).toFixed(1) : '0.0';
+      html += `<tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800">
+        <td class="border border-gray-300 dark:border-gray-700 px-2 py-1">${name}</td>
+        <td class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">${s.total}</td>
+        <td class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">${s.wins}</td>
+        <td class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">${s.losses}</td>
+        <td class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">${rate}</td>
+      </tr>`;
+    });
+    html += "</tbody></table>";
+    individualResult.innerHTML = html;
+
+    // 경기 상세 기록 렌더링 호출
+    renderMatchDetails();
+  });
+
+  // 경기 상세 기록 렌더링 함수
+  function renderMatchDetails() {
+    if (allMatches.length === 0) {
+      matchDetailsContainer.textContent = "경기 기록이 없습니다.";
+      return;
+    }
+
+    let html = "";
+
+    allMatches.forEach(({red, blue, result}, idx) => {
+      const redPlayers = red.map(p => `${p.name}(${p.line || '라인 미정'})`).join(', ');
+      const bluePlayers = blue.map(p => `${p.name}(${p.line || '라인 미정'})`).join(', ');
+      const winner = result.winner === 'red' ? '레드팀 승리' : '블루팀 승리';
+      const kills = result.kills ? `킬 스코어: ${result.kills}` : '';
+
+      html += `
+        <div class="mb-3 p-3 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-900">
+          <h3 class="font-semibold mb-1">경기 ${idx + 1}</h3>
+          <p><strong>레드팀:</strong> ${redPlayers}</p>
+          <p><strong>블루팀:</strong> ${bluePlayers}</p>
+          <p class="mt-1 text-green-600 dark:text-green-400 font-semibold">${winner} ${kills}</p>
+        </div>
+      `;
+    });
+
+    matchDetailsContainer.innerHTML = html;
+  }
+
+  // 두 명 승률 비교
+  compareBtn.addEventListener('click', () => {
+    const A = document.getElementById('playerA').value.trim();
+    const B = document.getElementById('playerB').value.trim();
+    if (!A || !B) {
+      compareResult.textContent = "두 유저 이름을 모두 입력하세요.";
+      return;
+    }
+    if (A === B) {
+      compareResult.textContent = "서로 다른 두 유저 이름을 입력하세요.";
+      return;
+    }
+    if (allMatches.length === 0) {
+      compareResult.textContent = "먼저 .ltrs 파일을 업로드하고 분석 버튼을 누르세요.";
+      return;
+    }
+
+    let Astats = {wins:0, losses:0, total:0};
+    let Bstats = {wins:0, losses:0, total:0};
+
+    allMatches.forEach(({red, blue, result}) => {
+      const Ateam = red.some(p => p.name === A) ? 'red' : (blue.some(p => p.name === A) ? 'blue' : null);
+      const Bteam = red.some(p => p.name === B) ? 'red' : (blue.some(p => p.name === B) ? 'blue' : null);
+      if (!Ateam || !Bteam || Ateam === Bteam) return;
+
+      const Awon = (result.winner === Ateam);
+
+      Astats.total++;
+      Bstats.total++;
+
+      if (Awon) {
+        Astats.wins++;
+        Bstats.losses++;
+      } else {
+        Astats.losses++;
+        Bstats.wins++;
+      }
+    });
+
+    if (Astats.total === 0) {
+      compareResult.textContent = "두 유저가 서로 다른 팀에 함께 출전한 기록이 없습니다.";
+      return;
+    }
+
+    const AwinRate = (Astats.wins / Astats.total * 100).toFixed(1);
+    const BwinRate = (Bstats.wins / Bstats.total * 100).toFixed(1);
+
+    compareResult.innerHTML = `
+      <p><strong>${A}</strong> : 경기 ${Astats.total}회, 승리 ${Astats.wins}회, 패배 ${Astats.losses}회, 승률 <strong>${AwinRate}%</strong></p>
+      <p><strong>${B}</strong> : 경기 ${Bstats.total}회, 승리 ${Bstats.wins}회, 패배 ${Bstats.losses}회, 승률 <strong>${BwinRate}%</strong></p>
+    `;
+  });
+
+  // 특정 유저 포함 팀 승률 분석
+  filterBtn.addEventListener('click', () => {
+    const userStr = document.getElementById('teamUsers').value.trim();
+    if (!userStr) {
+      teamFilterResult.textContent = "분석할 유저 이름을 입력하세요.";
+      return;
+    }
+    if (allMatches.length === 0) {
+      teamFilterResult.textContent = "먼저 .ltrs 파일을 업로드하고 분석 버튼을 누르세요.";
+      return;
+    }
+
+    const users = userStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    const filteredTeamStats = new Map();
+
+    function teamHasUser(teamPlayers, userList) {
+      return teamPlayers.some(p => userList.includes(p.name));
+    }
+
+    allMatches.forEach(({red, blue, result}) => {
+      const redKey = red.map(p => p.name).sort().join('|');
+      const blueKey = blue.map(p => p.name).sort().join('|');
+
+      if (teamHasUser(red, users)) {
+        if (!filteredTeamStats.has(redKey)) filteredTeamStats.set(redKey, {wins:0, losses:0, total:0});
+        const stats = filteredTeamStats.get(redKey);
+        stats.total++;
+        if (result.winner === 'red') stats.wins++; else stats.losses++;
+      }
+
+      if (teamHasUser(blue, users)) {
+        if (!filteredTeamStats.has(blueKey)) filteredTeamStats.set(blueKey, {wins:0, losses:0, total:0});
+        const stats = filteredTeamStats.get(blueKey);
+        stats.total++;
+        if (result.winner === 'blue') stats.wins++; else stats.losses++;
+      }
+    });
+
+    if (filteredTeamStats.size === 0) {
+      teamFilterResult.textContent = "해당 유저가 포함된 팀 기록이 없습니다.";
+      return;
+    }
+
+    // 팀별 승률 테이블 출력
+    let html = `<table class="w-full border-collapse border border-gray-300 dark:border-gray-700 text-sm">
+      <thead class="bg-gray-100 dark:bg-gray-800">
+        <tr>
+          <th class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-left">팀원 (5명)</th>
+          <th class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">경기 수</th>
+          <th class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">승리</th>
+          <th class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">패배</th>
+          <th class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">승률 (%)</th>
+        </tr>
+      </thead><tbody>`;
+
+    filteredTeamStats.forEach((s, team) => {
+      const rate = s.total ? ((s.wins/s.total)*100).toFixed(1) : '0.0';
+      html += `<tr class="odd:bg-white even:bg-gray-50 dark:odd:bg-gray-900 dark:even:bg-gray-800">
+        <td class="border border-gray-300 dark:border-gray-700 px-2 py-1">${team.replace(/\|/g, ', ')}</td>
+        <td class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">${s.total}</td>
+        <td class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">${s.wins}</td>
+        <td class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">${s.losses}</td>
+        <td class="border border-gray-300 dark:border-gray-700 px-2 py-1 text-right">${rate}</td>
+      </tr>`;
+    });
+
+    html += "</tbody></table>";
+    teamFilterResult.innerHTML = html;
+  });
+
+  // 특정 팀 승률 검색
+  exactTeamBtn.addEventListener('click', () => {
+    const teamStr = exactTeamInput.value.trim();
+    if (!teamStr) {
+      exactTeamResult.textContent = "팀원 5명의 이름을 콤마(,)로 입력하세요.";
+      return;
+    }
+    if (allMatches.length === 0) {
+      exactTeamResult.textContent = "먼저 .ltrs 파일을 업로드하고 분석 버튼을 누르세요.";
+      return;
+    }
+
+    const teamUsers = teamStr.split(',').map(s => s.trim()).filter(s => s.length > 0);
+    if (teamUsers.length !== 5) {
+      exactTeamResult.textContent = "정확히 5명의 팀원 이름을 입력해야 합니다.";
+      return;
+    }
+
+    let wins = 0, losses = 0, total = 0;
+
+    allMatches.forEach(({red, blue, result}) => {
+      const redNames = red.map(p => p.name).sort();
+      const blueNames = blue.map(p => p.name).sort();
+      const sortedInput = [...teamUsers].sort();
+
+      if (arraysEqual(redNames, sortedInput)) {
+        total++;
+        if (result.winner === 'red') wins++; else losses++;
+      } else if (arraysEqual(blueNames, sortedInput)) {
+        total++;
+        if (result.winner === 'blue') wins++; else losses++;
+      }
+    });
+
+    if (total === 0) {
+      exactTeamResult.textContent = "해당 팀원으로 구성된 팀 기록이 없습니다.";
+      return;
+    }
+
+    const winRate = ((wins / total) * 100).toFixed(1);
+    exactTeamResult.innerHTML = `
+      <p>총 경기 수: <strong>${total}</strong></p>
+      <p>승리: <strong>${wins}</strong></p>
+      <p>패배: <strong>${losses}</strong></p>
+      <p>승률: <strong>${winRate}%</strong></p>
+    `;
+  });
+
+  // 배열 동등 비교 헬퍼
+  function arraysEqual(a,b) {
+    if (a.length !== b.length) return false;
+    for (let i=0; i<a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
+</script>
+
+</body>
+</html>
