@@ -62,7 +62,7 @@
   };
 
   // 선수 입력창 생성
-  const createPlayerInput = (team, index, name = '', lane = '') => {
+  const createPlayerInput = (team, index, name = '', line = '') => {
     const container = document.getElementById(`${team}-team`);
     if (!container) return;
 
@@ -77,16 +77,16 @@
     nameInput.dataset.team = team;
     nameInput.classList.add("name");
 
-    let laneInput = document.createElement('input');
-    laneInput.placeholder = "라인 (예: 탑)";
-    laneInput.value = lane;
-    laneInput.className = "px-2 py-1 rounded text-black";
-    laneInput.dataset.index = index;
-    laneInput.dataset.team = team;
-    laneInput.classList.add("lane");
+    let lineInput = document.createElement('input');
+    lineInput.placeholder = "line (예: 탑)";
+    lineInput.value = line;
+    lineInput.className = "px-2 py-1 rounded text-black";
+    lineInput.dataset.index = index;
+    lineInput.dataset.team = team;
+    lineInput.classList.add("line");
 
     row.appendChild(nameInput);
-    row.appendChild(laneInput);
+    row.appendChild(lineInput);
     container.appendChild(row);
   };
 
@@ -95,8 +95,8 @@
     document.getElementById('red-team').innerHTML = '';
     document.getElementById('blue-team').innerHTML = '';
     for (let i = 0; i < 5; i++) {
-      createPlayerInput('red', i, redData[i]?.name || '', redData[i]?.lane || '');
-      createPlayerInput('blue', i, blueData[i]?.name || '', blueData[i]?.lane || '');
+      createPlayerInput('red', i, redData[i]?.name || '', redData[i]?.line || '');
+      createPlayerInput('blue', i, blueData[i]?.name || '', blueData[i]?.line || '');
     }
     document.getElementById('winner').value = resultData.winner || '';
     document.getElementById('score').value = resultData.score || '';
@@ -162,11 +162,11 @@
   document.getElementById('download').addEventListener('click', () => {
     const red = [...document.querySelectorAll('#red-team input.name')].map((el, i) => ({
       name: el.value.trim(),
-      lane: document.querySelectorAll('#red-team input.lane')[i].value.trim()
+      line: document.querySelectorAll('#red-team input.line')[i].value.trim()
     }));
     const blue = [...document.querySelectorAll('#blue-team input.name')].map((el, i) => ({
       name: el.value.trim(),
-      lane: document.querySelectorAll('#blue-team input.lane')[i].value.trim()
+      line: document.querySelectorAll('#blue-team input.line')[i].value.trim()
     }));
     const result = {
       winner: document.getElementById('winner').value.trim(),
