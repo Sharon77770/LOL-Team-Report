@@ -23,6 +23,10 @@
 
 <div class="max-w-5xl w-full flex flex-col space-y-4">
 
+  <div class="flex flex-col sm:flex-row gap-4 mb-6">
+    <a href="editor.html" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold shadow-lg transition">에디터로 이동</a>
+  </div>
+
   <!-- 파일 업로드 및 분석 버튼 -->
   <div class="flex flex-col sm:flex-row gap-4 mb-6">
     <input id="upload" type="file" accept=".ltrs" multiple
@@ -46,7 +50,7 @@
   <section id="overall" class="tab-content block">
     <h2 class="text-2xl font-semibold mb-2">전체 전적</h2>
     <div id="overallResult" class="border border-gray-300 dark:border-gray-700 rounded p-4 bg-gray-50 dark:bg-gray-800 min-h-[4rem] text-center text-lg font-medium">
-      데이터를 업로드하고 분석을 시작하세요.
+      .ltrs 파일을 업로드하고 분석을 시작하세요.
     </div>
   </section>
 
@@ -56,7 +60,7 @@
   </section>
 
   <section id="compare" class="tab-content hidden">
-    <h2 class="text-2xl font-semibold mb-2">두 명 승률 비교</h2>
+    <h2 class="text-2xl font-semibold mb-2">유저간 승률 비교</h2>
     <div class="flex flex-col sm:flex-row gap-4 mb-2">
       <input type="text" id="playerA" placeholder="유저 A 이름" class="flex-1 px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
       <input type="text" id="playerB" placeholder="유저 B 이름" class="flex-1 px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
@@ -68,7 +72,7 @@
   <section id="teamFilter" class="tab-content hidden">
     <h2 class="text-2xl font-semibold mb-2">특정 유저 포함 팀 승률</h2>
     <div class="flex gap-4 mb-2">
-      <input type="text" id="teamUsers" placeholder="콤마(,)로 구분된 유저 이름들" class="flex-grow px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
+      <input type="text" id="teamUsers" placeholder="콤마(,)로 유저를 구분하여 입력해주세요." class="flex-grow px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
       <button id="filterBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">분석하기</button>
     </div>
     <div id="teamFilterResult" class="overflow-auto max-h-96 border border-gray-300 dark:border-gray-700 rounded p-2 bg-gray-50 dark:bg-gray-800"></div>
@@ -76,9 +80,9 @@
 
   <section id="exactTeam" class="tab-content hidden">
     <h2 class="text-2xl font-semibold mb-2">특정 팀 승률 검색</h2>
-    <p class="mb-2 text-gray-600 dark:text-gray-400">플레이어 이름 5명을 콤마(,)로 구분하여 입력하세요.</p>
+    <p class="mb-2 text-gray-600 dark:text-gray-400">콤마(,)로 유저 5명을 구분하여 입력해주세요.</p>
     <div class="flex gap-4 mb-2">
-      <input type="text" id="exactTeamInput" placeholder="예: Alice,Bob,Carol,Dave,Eve" class="flex-grow px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
+      <input type="text" id="exactTeamInput" placeholder="예: sharon77770,Init,VIKASA,김철수,85세박찬수할아버지최후의끌어치기" class="flex-grow px-3 py-2 rounded border border-gray-300 dark:border-gray-700 text-black" />
       <button id="exactTeamBtn" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded">검색</button>
     </div>
     <div id="exactTeamResult" class="border border-gray-300 dark:border-gray-700 rounded p-4 bg-gray-50 dark:bg-gray-800 min-h-[4rem]"></div>
@@ -136,7 +140,7 @@
     individualResult.innerHTML = '';
     compareResult.innerHTML = '';
     teamFilterResult.innerHTML = '';
-    overallResult.textContent = '데이터를 업로드하고 분석을 시작하세요.';
+    overallResult.textContent = '.ltrs 파일을 업로드하고 분석을 시작하세요.';
     exactTeamResult.textContent = '';
     matchDetailsContainer.textContent = '';
 
@@ -160,7 +164,7 @@
           if (Array.isArray(data)) {
             aggregatedMatches.push(...data);
           } else {
-            alert(`잘못된 파일 형식: ${file.name} (배열이 아님)`);
+            alert(`잘못된 파일 형식: ${file.name} (내용 손상)`);
           }
         } catch (err) {
           alert(`파싱 에러: ${file.name}\n${err}`);
@@ -405,7 +409,7 @@
   exactTeamBtn.addEventListener('click', () => {
     const teamStr = exactTeamInput.value.trim();
     if (!teamStr) {
-      exactTeamResult.textContent = "팀원 5명의 이름을 콤마(,)로 입력하세요.";
+      exactTeamResult.textContent = "콤마(,)로 유저 5명을 구분하여 입력해주세요.";
       return;
     }
     if (allMatches.length === 0) {
