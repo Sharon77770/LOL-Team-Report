@@ -43,12 +43,6 @@ LOL-Team-Report는
 
 ---
 
-## Preview
-
-![preview](./docs/preview.png)
-
----
-
 ## Tech Stack
 
 ### Frontend
